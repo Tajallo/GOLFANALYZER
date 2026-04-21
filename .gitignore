@@ -1,0 +1,8 @@
+.gemini/
+*.mp4
+*.MOV
+*.jpg
+*.jpeg
+*.png
+node_modules/
+.DS_Store

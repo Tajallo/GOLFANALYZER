@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.0] - 2026-04-22
+### Added
+- **Pro Analysis Dashboard (v4)**: High-performance fullscreen modal for synchronized video analysis.
+- **Advanced Playback Engine**: Added Master Play/Pause, Scrubber (frame-by-frame seeking), and variable speed control (0.25x, 0.5x, 1x).
+- **Deep Biomechanical Audit**: 
+  - **Comparative Metric Table**: Real-time comparison of Spine Tilt, Shoulder Turn, and Knee Flexion between User and Pro.
+  - **Stage-by-Stage Diagnostics**: Dedicated analysis for Address (Posture) and Transition phases.
+- **HUD Toggles (Golf Boy Style)**: Dynamic layer selector for Skeleton (Guía), Joints (Cruces), Angles, and Movement Trail.
+- **Hand Path Trail**: New visualization that draws the arc of the swing in real-time, allowing for path-plane analysis.
+- **Optimized Viewport**: XL display mode with automated aspect-ratio scaling to prevent cropping on high-resolution portrait videos.
+
+### Fixed
+- **UI Stability**: Resolved syntax errors that caused the club list and general initialization to fail.
+- **Landmark Visibility**: Upgraded User skeleton to Bright Cyan (#00D1FF) with 4px lines for superior visibility on outdoor backgrounds.
+- **Data Capture**: Implemented pose history buffer to ensure audit metrics are captured even with delayed AI results.
+
 ## [2.1.0] - 2026-04-21
 ### Added
 - **v2.1 UI Update**: Added version badge in the header to confirm successful reload and bypass cache issues.

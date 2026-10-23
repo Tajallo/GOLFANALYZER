@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.5.0] - 2026-10-23
+### Added
+- **Full Video MP4 Export Engine (`v4.5`)**: Export the analyzed golf swing frame-by-frame with all overlays (skeletons, postural guides, ideal ghost avatar, hand trajectory, and HUD telemetry) into a crystal-clear H.264 MP4 file.
+- **Hardware-Accelerated Encoding**: Integrated `mp4-muxer` and WebCodecs (`VideoEncoder`) for deterministic, fast offline frame rendering without stutter or dropped frames.
+- **MediaRecorder Fallback**: Added real-time stream recording fallback for browsers without WebCodecs support.
+- **Configurable Playback Speeds for Export**: Options for 0.25x (Recommended slow-motion for biomechanical swing analysis), 0.5x, and 1.0x (real-time).
+- **Resolution Selector**: Choose between Full HD 1080p (optimized, fast and compatible for social media/coaches) and Original video resolution (up to 4K).
+- **Interactive Visual Layer Toggles**: Checkboxes to customize which layers to include in the exported video (Skeleton & Joints, Hands Trajectory with A/T/I/F markers, Spine & Pelvis Guides, Ideal Ghost Swing + Face Angle, and HUD).
+- **Broadcast-Grade HUD Overlay**: Sleek semi-transparent pills displaying current swing phase (`ADDRESS`, `BACKSWING`, `IMPACTO`, `FINISH`), impact-relative timer, club name, tempo ratio, and frame counter.
+- **Batch Swing Export**: Ability to export the currently selected swing or all detected swings in the video session in sequence.
+- **Progress Modal & Safety Cancel**: Real-time progress bar with percentage and frame count, plus responsive cancel handling.
+
+### Fixed
+- **Camera Auto-Detection Bug**: Fixed `const VIEW = 'dtl'` reassignment error in `autoView` by converting `VIEW` to `let`.
+- **Seek Timeout Reliability**: Added `safeSeek` with timeout protection to prevent seeking freezes during video scrubbing and export.
+
 ## [2.2.0] - 2026-04-22
 ### Added
 - **Pro Analysis Dashboard (v4)**: High-performance fullscreen modal for synchronized video analysis.

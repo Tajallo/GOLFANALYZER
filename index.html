@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Golf Pro">
+<meta name="theme-color" content="#0a0d14">
+<link rel="apple-touch-icon" href="https://img.icons8.com/color/180/golf.png">
+<title>Golf Swing Analyzer v4.6 Pro</title>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@latest/build/mp4-muxer.js"></script>
+<style>
+:root{--bg:#0a0d14;--card:#121721;--bd:#232b3b;--tx:#f1f5f9;--mu:#8b97ab;--ok:#00e6a4;--wa:#fbbf24;--ba:#ef4444;--lead:#00d1ff}
+*{box-sizing:border-box;margin:0}[hidden]{display:none!important}
+body{background:var(--bg);color:var(--tx);font:15px system-ui,sans-serif;display:flex;justify-content:center}
+main{width:100%;max-width:560px;padding:16px;display:flex;flex-direction:column;gap:14px}
+h1{font-size:22px}h1 small{color:var(--ok);font-size:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mu);flex:1;min-width:90px}
+select,input[type=text],input[type=number]{background:#0d121b;color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:8px;font-size:14px;width:100%}
+.drop{border:2px dashed var(--bd);border-radius:12px;padding:22px;text-align:center;cursor:pointer;color:var(--tx);font-size:15px}
+button{background:#1b2333;color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:9px 12px;font-size:13px;cursor:pointer}
+button.main{width:100%;background:var(--ok);color:#06120d;font-weight:700;font-size:16px;padding:13px;border:0}
+button:disabled{opacity:.4}button.on{border-color:var(--ok);color:var(--ok)}
+.pb{height:5px;background:#0d121b;border-radius:9px;margin-top:10px;overflow:hidden}.pb i{display:block;height:100%;width:0;background:var(--ok)}
+#st{font-size:12px;color:var(--mu);margin-top:6px}
+.vw{position:relative;background:#000;border-radius:12px;overflow:hidden;width:fit-content;max-width:100%;margin:0 auto}
+.vw video{display:block;width:auto;height:auto;max-width:100%;max-height:70vh}.vw canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#ph{position:absolute;top:8px;left:8px;background:#000a;padding:3px 8px;border-radius:6px;font-size:12px}
+input[type=range]{width:100%;margin:8px 0}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.m{background:#0d121b;border:1px solid var(--bd);border-radius:10px;padding:10px;border-left:4px solid var(--mu)}
+.m.ok{border-left-color:var(--ok)}.m.warn{border-left-color:var(--wa)}.m.bad{border-left-color:var(--ba)}
+.m b{font-size:20px}.m span{display:block;font-size:11px;color:var(--mu)}.m p{font-size:11px;color:#cbd5e1;margin-top:6px;line-height:1.35}
+.dg{padding:10px;border-radius:10px;background:#0d121b;border:1px solid var(--bd);font-size:13px;line-height:1.45;margin-bottom:8px}
+.dg.bad{border-color:var(--ba)}.dg.warn{border-color:var(--wa)}.dg.ok{border-color:var(--ok)}
+h2{font-size:13px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.h{font-size:12px;color:var(--mu);padding:6px 0;border-bottom:1px solid var(--bd)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(5,8,13,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px}
+.modal-card{background:#121721;border:1px solid #232b3b;border-radius:16px;padding:22px;width:100%;max-width:520px;box-shadow:0 24px 50px rgba(0,0,0,0.8);max-height:92vh;overflow-y:auto}
+.dl-btn{background:linear-gradient(135deg,#00d1ff,#00e6a4);color:#06120d;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:10px;box-shadow:0 4px 15px rgba(0,230,164,0.25);border:0;cursor:pointer;width:100%;transition:transform .15s,filter .15s}
+.dl-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.chk-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin:8px 0}
+.chk-grid label{flex-direction:row;align-items:center;gap:7px;cursor:pointer;color:#e2e8f0}
+.price-card{background:#0d121b;border:1px solid var(--bd);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;cursor:pointer;transition:all .2s}
+.price-card:hover{border-color:var(--ok);background:#121a24;transform:translateY(-1px)}
+.price-card.pop{border-color:var(--ok);box-shadow:0 0 15px rgba(0,230,164,0.2)}
+.guide-box{background:#0d121b;border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px;line-height:1.45}
+.badge-chip{font-size:10px;background:rgba(0,230,164,0.15);color:var(--ok);padding:3px 8px;border-radius:12px;font-weight:700}
+</style></head><body><main>
+
+<header class="card" style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#121721,#0d121b);border-color:#2a3449">
+ <div style="display:flex;align-items:center;gap:10px">
+  <span style="font-size:24px">⛳</span>
+  <div>
+   <h1 style="font-size:18px;margin:0">Golf Swing Analyzer <small style="color:var(--ok);font-size:11px">v4.6 Pro</small></h1>
+   <span id="credit-badge" style="font-size:11px;color:var(--ok);font-weight:600">🪙 <span id="credit-count">1</span> crédito IA disponible</span>
+  </div>
+ </div>
+ <div style="display:flex;gap:6px">
+  <button onclick="openStoreModal()" style="background:#1b2333;border-color:var(--ok);color:var(--ok);font-size:12px;padding:7px 11px;font-weight:600;border-radius:8px">1€ / swing</button>
+  <button onclick="openProReviewModal()" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1c1301;border:0;font-size:12px;padding:7px 11px;font-weight:700;border-radius:8px;box-shadow:0 2px 10px rgba(251,191,36,0.3)">Revisión Pro (50€)</button>
+ </div>
+</header>
+
+<section class="card">
+ <label class="drop">📹 Elegir vídeo del swing (1 swing por vídeo)<input id="file" type="file" accept="video/*" hidden></label>
+ <div class="row">
+  <label>Mano<select id="hand" onchange="onHandChange()"><option value="R" selected>Diestro</option><option value="L">Zurdo</option></select></label>
+  <label>Cámara<select id="view"><option value="auto" selected>Auto (detectar)</option><option value="dtl">Desde atrás (DTL)</option><option value="face">De frente (face-on)</option></select></label>
+  <label>Palo<input id="club" type="text" maxlength="4" placeholder="9, P, 52…"></label>
+ </div>
+ <div style="display:flex;justify-content:space-between;align-items:center;margin:-2px 0 10px">
+  <button type="button" onclick="openFramingGuideModal()" style="background:none;border:none;color:var(--lead);font-size:12px;padding:2px 0;cursor:pointer;display:flex;align-items:center;gap:5px;font-weight:500">
+   📷 Ver guía de encuadre correcto (DTL vs Frente)
+  </button>
+ </div>
+ <details><summary style="font-size:13px;color:var(--mu);cursor:pointer">Datos Golfboy (opcional, cruza bola + cuerpo)</summary>
+  <div class="row">
+   <label>Carry m<input id="gCarry" type="number"></label><label>Total m<input id="gTotal" type="number"></label>
+   <label>Vel. bola km/h<input id="gSpd" type="number"></label><label>Áng. salida °<input id="gAng" type="number" step=".1"></label>
+   <label>Dirección<select id="gSide"><option value="L">L (izq.)</option><option value="R">R (der.)</option></select></label>
+   <label>Dir. grados<input id="gDir" type="number" step=".1"></label>
+  </div></details>
+ <label style="flex-direction:row;align-items:center;gap:6px;margin:8px 0 10px"><input type="checkbox" id="sim" onchange="renderDual()"> Las dos cámaras grabaron los mismos swings a la vez</label>
+ <button id="go" class="main" disabled onclick="analyze()">Analizar swing</button>
+ <div class="pb"><i id="bar"></i></div><p id="st"></p>
+</section>
+
+<section id="res" class="card" hidden>
+ <div class="vw"><video id="vid" playsinline muted></video><canvas id="cv"></canvas><div id="ph" hidden></div></div>
+ <input id="sc" type="range" min="0" max="0" value="0">
+ <div class="row" id="ctl" hidden style="margin:0 0 8px">
+  <button onclick="jump('ad')">Address</button><button onclick="jump('top')">Top</button><button onclick="jump('im')">Impacto</button><button onclick="jump('fin')">Finish</button>
+  <button onclick="step(-1)">◀ frame</button><button id="pl" onclick="toggle()">▶</button><button onclick="step(1)">frame ▶</button>
+  <select id="spd" onchange="v.playbackRate=+this.value" style="width:auto"><option value="1">1x</option><option value=".5">0.5x</option><option value=".25" selected>0.25x</option><option value=".1">0.1x</option></select>
+ </div>
+ <div class="row" id="ctl2" hidden style="margin:0">
+  <button class="on" data-o="sk">Esqueleto</button><button class="on" data-o="tr">Trayectoria manos</button><button class="on" data-o="gd">Guías</button><button class="on" data-o="gh">Swing ideal</button><select id="sw" onchange="pick(+this.value)" style="width:auto"></select>
+  <button onclick="fix('top')">Fijar Top aquí</button><button onclick="fix('im')">Fijar Impacto aquí</button>
+ </div>
+ <div class="row" id="ctl-export" hidden style="margin-top:10px">
+  <button class="dl-btn" onclick="openExportModal()">
+   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+   Descargar vídeo analizado (MP4)
+  </button>
+ </div>
+</section>
+
+<section id="out" hidden>
+ <div class="card" id="dual" hidden><h2>Diagnóstico combinado · qué corregir</h2><div id="dualb"></div><button onclick="DATA.face=DATA.dtl=null;renderDual()" style="margin-top:8px">Borrar vistas guardadas</button></div>
+ <div class="card"><h2>Swings de la sesión (toca para abrir)</h2><div id="cmp"></div></div>
+ <div class="card"><h2>Diagnóstico</h2><div id="dg"></div></div>
+ <div class="card"><h2 id="mh">Métricas</h2><div class="g" id="mt"></div></div>
+ <button class="main" onclick="save()" style="background:#1b2333;color:var(--tx);border:1px solid var(--bd);font-size:14px">Guardar sesión</button>
+ <div class="card"><h2>Historial</h2><div id="hist"></div></div>
+</section>
+
+<script>
+const $=id=>document.getElementById(id),v=$('vid'),cv=$('cv'),cx=cv.getContext('2d'); let FPS=60;const HEV='⚠ El navegador no puede leer este vídeo (suele ser HEVC). En el iPhone: Ajustes → Cámara → Formatos → Más compatible; o abre la app en Safari; o convierte: ffmpeg -i entrada.mov -c:v libx264 -crf 18 salida.mp4';
+let F=[],PH=null,M=[],miss=0,pose,last=null,lastWorld=null,opts={sk:1,tr:1,gd:1,gh:1},SW=[],OFF=0,VIEW='dtl';
+let credits=parseInt(localStorage.getItem('swingCredits')||'3');
+const updateCreditsUI=()=>{const el=$('credit-count');if(el)el.textContent=credits;localStorage.setItem('swingCredits',credits)};
+const lefty=()=>$('hand').value==='L',view=()=>$('view').value==='auto'?VIEW:$('view').value;
+function onHandChange(){if(SW.length){SW.forEach(s=>{s.M=metrics()});render();renderCmp()}}
+const sides=()=>{const R={s:12,e:14,w:16,h:24,k:26,a:28},L={s:11,e:13,w:15,h:23,k:25,a:27};return lefty()?{lead:R,trail:L}:{lead:L,trail:R}};
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),mid=(f,a,b)=>({x:(f[a].x+f[b].x)/2,y:(f[a].y+f[b].y)/2});
+const med=a=>[...a].sort((x,y)=>x-y)[a.length>>1];
+const ang=(a,b,c)=>{let d=Math.abs((Math.atan2(c.y-b.y,c.x-b.x)-Math.atan2(a.y-b.y,a.x-b.x))*180/Math.PI);return d>180?360-d:d};
+const seek=t=>new Promise(r=>{if(Math.abs(v.currentTime-t)<1e-4)return r();let d=0;const cb=()=>{if(!d){d=1;v.removeEventListener('seeked',cb);r()}};v.addEventListener('seeked',cb,{once:true});v.currentTime=Math.min(v.duration-0.001,Math.max(0,t));setTimeout(cb,250)});
+const safeSeek=t=>new Promise(r=>{if(Math.abs(v.currentTime-t)<1e-4)return r();let d=0;const cb=()=>{if(!d){d=1;v.removeEventListener('seeked',cb);r()}};v.addEventListener('seeked',cb,{once:true});v.currentTime=Math.min(v.duration-0.001,Math.max(0,t));setTimeout(cb,600)});
+const arg=(a,lo,hi,fn)=>{let b=lo;for(let i=lo;i<=hi;i++)if(fn(a[i])>fn(a[b]))b=i;return b};
+const frame=()=>Math.min(F.length-1,Math.max(0,Math.round((v.currentTime-OFF)*FPS)));
+
+$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;v.onerror=()=>{$('st').textContent=HEV};v.src=URL.createObjectURL(f);F=[];PH=null;
+ $('res').hidden=false;$('out').hidden=true;$('ctl').hidden=$('ctl2').hidden=$('ctl-export').hidden=$('ph').hidden=true;$('go').disabled=false;$('st').textContent=f.name;renderHist()};
+document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{opts[b.dataset.o]^=1;b.classList.toggle('on')});
+
+function smooth(R){
+ return R.map((_,i)=>R[i].map((p,j)=>{
+  let x=0,y=0,z=0,w=0,wx=0,wy=0,wz=0,hasW=0;
+  for(let k=-2;k<=2;k++){
+   const q=R[i+k];if(!q)continue;
+   const c=3-Math.abs(k);
+   x+=q[j].x*c;y+=q[j].y*c;z+=(q[j].z||0)*c;w+=c;
+   if(q[j].w){wx+=q[j].w.x*c;wy+=q[j].w.y*c;wz+=q[j].w.z*c;hasW=1}
+  }
+  return {x:x/w,y:y/w,z:z/w,v:p.v,w:hasW?{x:wx/w,y:wy/w,z:wz/w}:null};
+ }));
+}
+
+function srcFps(){return new Promise(r=>{if(!v.requestVideoFrameCallback)return r(30);const m=[];v.muted=true;v.currentTime=0;
+ const cb=(_,md)=>{m.push(md.mediaTime);if(m.length<14)v.requestVideoFrameCallback(cb);else{v.pause();const d=(m[m.length-1]-m[0])/(m.length-1);v.currentTime=0;r(d>0?1/d:30)}};
+ v.requestVideoFrameCallback(cb);v.play().catch(()=>r(30));setTimeout(()=>{v.pause();r(30)},4000)})}
+async function grab(t0,t1){
+ const W=cv.width,H=cv.height,n=Math.floor((t1-t0)*FPS);let raw=[];miss=0;
+ for(let i=0;i<n;i++){
+  await seek(t0+i/FPS);last=null;lastWorld=null;await pose.send({image:v});
+  let p=last&&last.map((q,idx)=>({
+   x:q.x*W,y:q.y*H,z:q.z,v:q.visibility,
+   w:lastWorld&&lastWorld[idx]?{x:lastWorld[idx].x,y:lastWorld[idx].y,z:lastWorld[idx].z}:null
+  }));
+  if(!p){miss++;p=raw[i-1]||null}
+  raw.push(p);
+ }
+ const first=raw.find(Boolean);return first?smooth(raw.map(p=>p||first)):null;
+}
+
+async function analyze(){
+ if(credits<=0){openStoreModal();$('st').textContent='⚠️ Sin créditos disponibles. Adquiere créditos para analizar nuevos swings.';return}
+ $('go').disabled=true;SW=[];$('out').hidden=true;
+ const opt=c=>pose.setOptions({modelComplexity:c,smoothLandmarks:false,minDetectionConfidence:.5,minTrackingConfidence:.5});
+ try{
+  if(!pose){pose=new Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}`});
+   pose.onResults(r=>{last=r.poseLandmarks||null;lastWorld=r.poseWorldLandmarks||null});opt(1);await pose.initialize()}
+  opt(1);v.pause();if(v.readyState<1)await new Promise((r,j)=>{v.onloadedmetadata=r;v.onerror=()=>j(Error(HEV))});
+  const src=await srcFps();FPS=Math.min(120,[24,30,60,120,240].reduce((a,b)=>Math.abs(b-src)<Math.abs(a-src)?b:a));
+  const W=cv.width=v.videoWidth,H=cv.height=v.videoHeight,dt=.1,n=Math.floor(v.duration/dt);let P=[];
+  for(let i=0;i<n;i++){await seek(i*dt);last=null;lastWorld=null;await pose.send({image:v});const q=last;
+   P.push(q?{x:(q[15].x+q[16].x)/2*W,y:(q[15].y+q[16].y)/2*H,sy:(q[11].y+q[12].y)/2*H,tl:Math.hypot((q[11].x+q[12].x-q[23].x-q[24].x)/2*W,(q[11].y+q[12].y-q[23].y-q[24].y)/2*H)}:null);
+   $('bar').style.width=(50*i/n)+'%';$('st').textContent=`Buscando swings… ${Math.round(100*i/n)}%`}
+  const first=P.find(Boolean);if(!first)throw Error('No se detecta a la persona en el vídeo.');let pv=first;const Pf=P.map(p=>pv=p||pv);
+  const tl=med(Pf.map(p=>p.tl)),hr0=Pf.map(p=>(p.sy-p.y)/tl),sm=hr0.map((x,i)=>((hr0[i-1]??x)+x+(hr0[i+1]??x))/3),
+   sp=Pf.map((p,i)=>i?Math.hypot(p.x-Pf[i-1].x,p.y-Pf[i-1].y)/dt/tl:0);
+  let pk=[];for(let i=1;i<sm.length-1;i++)if(sm[i]>.05&&sm[i]>=sm[i-1]&&sm[i]>sm[i+1])pk.push(i);
+  const mn=(a,b)=>Math.min(...sm.slice(a,b+1)),mxs=(a,b)=>Math.max(...sp.slice(a,b+1));
+  for(let ch=1;ch&&pk.length>1;){ch=0;for(let j=0;j<pk.length-1;j++){const a=pk[j],b=pk[j+1];if(mn(a,b)>Math.min(sm[a],sm[b])-.25){pk.splice(sm[a]<sm[b]?j:j+1,1);ch=1;break}}}
+  const pr=[];for(let j=0;j<pk.length-1;j++){const a=pk[j],b=pk[j+1];if(mn(a,b)<=Math.min(sm[a],sm[b])-.5)pr.push({j,a,b,s:mxs(a,b)})}
+  const par=[0,1].map(q=>pr.filter(x=>x.j%2===q).reduce((t,x)=>t+x.s,0)),K=pr.filter(x=>x.j%2===(par[1]>par[0]?1:0));
+  if(!K.length)throw Error('No encuentro un swing completo (subida y bajada de manos). ¿Se ve el cuerpo entero?');
+  opt(1);let vset=0;
+  for(let k=0;k<K.length;k++){const{a,b}=K[k],im=a+sm.slice(a,b+1).indexOf(mn(a,b)),D=Math.max(dt,(im-a)*dt),tp=im*dt,t0=Math.max(k?K[k-1].b*dt+.3:0,a*dt-8*D-1),t1=Math.min(v.duration-.05,b*dt+Math.max(.4,D));
+   $('st').textContent=`Midiendo swing ${k+1}/${K.length} (modelo de alta precisión)`;$('bar').style.width=(50+50*k/K.length)+'%';
+   const f=await grab(t0,t1);if(!f)continue;if(!vset&&$('view').value==='auto'){VIEW=autoView(f);vset=1}F=f;PH=phases(Math.round((tp-t0)*FPS),Math.round(Math.max(.2,.6*D)*FPS));if(!PH)continue;PH.slow=D>.6;PH.view=view();PH.G=ghostDims();OFF=t0;M=metrics();SW.push({F,PH,M,off:t0,miss})}
+  if(!SW.length)throw Error('No pude medir ningún swing completo.');
+  $('sw').innerHTML=SW.map((_,i)=>`<option value="${i}">Swing ${i+1}</option>`).join('');
+  $('bar').style.width='100%';$('ctl').hidden=$('ctl2').hidden=$('ctl-export').hidden=$('ph').hidden=false;$('out').hidden=false;pick(0);DATA[view()]=SW.slice();renderDual();
+  if(credits>0){credits--;updateCreditsUI()}
+  $('st').textContent=`${SW.length} swing(s) medidos a ${FPS} fps (vídeo ≈${Math.round(src)} fps). Revisa las fases y corrige Top/Impacto si hace falta.`;
+ }catch(e){$('st').textContent='Error: '+e.message}
+ $('go').disabled=false;
+}
+function pick(i){const s=SW[i];F=s.F;PH=s.PH;M=s.M;OFF=s.off;miss=s.miss;$('sw').value=i;$('sc').max=F.length-1;render();renderCmp();jump('im')}
+function renderCmp(){const c=+$('sw').value,tv=s=>(s.M.find(x=>x.id==='tempo')||{val:0}).val,tm=SW.reduce((a,s)=>a+tv(s),0)/SW.length;
+ $('cmp').innerHTML=SW.map((s,i)=>{const ok=s.M.filter(x=>x.st==='ok').length,t=s.M.filter(x=>x.st!=='info').length,b=s.M.filter(x=>x.st==='bad').map(x=>x.l.split(' (')[0]).slice(0,2).join(', ');
+  return`<div class="h" style="cursor:pointer;${i===c?'color:var(--ok)':''}" onclick="pick(${i})">Swing ${i+1} · ${(s.off+s.PH.im/FPS).toFixed(0)}s · tempo ${tv(s).toFixed(2)}:1 · ${ok}/${t} OK · ${b||'sin alertas'}</div>`}).join('')+`<div class="h">Tempo medio ${tm.toFixed(2)}:1 · variación ±${Math.sqrt(SW.reduce((a,s)=>a+(tv(s)-tm)**2,0)/SW.length).toFixed(2)} (menor = más repetible)</div>`}
+
+function phases(est,W){W=W||Math.round(.2*FPS);
+ const n=F.length,TL=med(F.map(f=>dist(mid(f,11,12),mid(f,23,24)))),H=F.map(f=>mid(f,15,16));
+ const sp=H.map((p,i)=>i?dist(p,H[i-1])*FPS/TL:0),s=sp.map((x,i)=>((sp[i-1]??x)+x+(sp[i+1]??x))/3);
+ const e=Math.min(n-2,Math.max(4,est)),i0=arg(H,Math.max(1,e-W),Math.min(n-1,e+W),p=>p.y);
+ const top=arg(H,0,i0-2,p=>-p.y);if(top<3)return null;
+ const ys=H.slice(0,top-1).map(p=>p.y).sort((x,y)=>x-y),yl=ys[Math.floor(.7*ys.length)];let q=0,bq=1e9;for(let k=0;k<=top-2;k++)if(H[k].y>=yl&&s[k]<bq){bq=s[k];q=k}
+ let tk=top;while(tk>0&&dist(H[tk],H[q])>.12*TL)tk--;
+ let im=i0,bd=1e9;for(let k=Math.max(top+1,i0-Math.round(.1*FPS));k<=Math.min(n-1,i0+Math.round(.1*FPS));k++){const d=Math.abs(H[k].y-H[q].y);if(d<bd){bd=d;im=k}}
+ im=Math.min(n-1,Math.max(top+1,Math.round(im+IMPOFF*FPS)));const g3=Math.round(.1*FPS),fin=im+g3<n?arg(H,im+g3,n-1,p=>-p.y):n-1;
+ return{ad:Math.max(0,tk-Math.round(.1*FPS)),tk,top,im,fin,TL,H,s}}
+
+function metrics(){
+ const{ad,tk,top,im,TL,H,s}=PH,S=sides(),V=view(),f0=F[ad],ft=F[top],fi=F[im];
+ const tilt=f=>{const h=mid(f,23,24),q=mid(f,11,12);return Math.abs(Math.atan2(q.x-h.x,h.y-q.y)*180/Math.PI)};
+ const w0=(a,b)=>Math.max(...F.slice(0,tk+1).map(f=>dist(f[a],f[b])));
+ const turn3D=(a,b)=>{
+  if(f0[a].w&&f0[b].w&&ft[a].w&&ft[b].w){
+   const dx0=f0[b].w.x-f0[a].w.x,dz0=f0[b].w.z-f0[a].w.z;
+   const dxt=ft[b].w.x-ft[a].w.x,dzt=ft[b].w.z-ft[a].w.z;
+   const a0=Math.atan2(dz0,dx0);
+   const at=Math.atan2(dzt,dxt);
+   let d=Math.abs((at-a0)*180/Math.PI);
+   if(d>180)d=360-d;
+   return d;
+  }
+  const w=w0(a,b);
+  return w>0?Math.acos(Math.min(1,dist(ft[a],ft[b])/w))*180/Math.PI:0;
+ };
+ const dir=Math.sign(H[ad].x-mid(f0,23,24).x)||1,hx=(f,h)=>(h.x-mid(f,23,24).x)*dir/TL;
+ const sh=V==='face'?turn3D(11,12):0,hp=V==='face'?turn3D(23,24):0;
+ const L=[
+ ['tempo','Tempo (atrás : bajada)',(top-tk)/(im-top),':1',[2.5,3.5],2,'both','Cuenta “uno-dos-tres-¡pam!”: 3 tiempos atrás y 1 de bajada. Los jugadores de tour rondan 3:1.'],
+ ['spAd','Inclinación columna (address)',tilt(f0),'°',V==='dtl'?[25,45]:[0,12],1,'both',V==='dtl'?'Te falta (o te sobra) flexión desde caderas. Cuelga los brazos bajo los hombros y baja el torso desde la cadera.':'Inclinación lateral anormal en el address.'],
+ ['spLoss','Pérdida de postura (address→impacto)',Math.abs(tilt(fi)-tilt(f0)),'°',[0,6],1,'dtl','Te levantas en la bajada. Drill: espalda del pantalón rozando una silla/pared hasta el impacto.'],
+ ['kAd','Flexión rodilla guía (address)',ang(f0[S.lead.h],f0[S.lead.k],f0[S.lead.a]),'°',[140,168],0,'both','Rodillas muy rígidas o muy flexionadas: busca una flexión suave y atlética.'],
+ ['kIm','Rodilla guía en impacto',ang(fi[S.lead.h],fi[S.lead.k],fi[S.lead.a]),'°',[150,178],0,'both','La pierna guía debe estabilizarse, no colapsar.'],
+ ['arm','Brazo guía en el top',ang(ft[S.lead.s],ft[S.lead.e],ft[S.lead.w]),'°',[155,180],0,'both','Brazo guía muy doblado: pierdes radio y consistencia de contacto.'],
+ ['sh','Giro de hombros (top)',sh,'°',[80,105],0,'face','Giro corto: acaba la espalda mirando al objetivo.'],
+ ['hp','Giro de caderas (top)',hp,'°',[35,60],0,'face','Caderas muy abiertas o cerradas en el top.'],
+ ['xf','X-Factor (hombros − caderas)',Math.max(0,sh-hp),'°',[28,55],0,'face','Poca separación: gira hombros sin arrastrar las caderas.'],
+ ['hs','Desplazamiento lateral cabeza (top)',Math.abs(ft[0].x-f0[0].x)/TL,'TL',[0,.3],2,'face','Sway: mantén la cabeza estable sobre el centro.'],
+ ['hr','Subida/bajada de cabeza (→impacto)',Math.abs(fi[0].y-f0[0].y)/TL,'TL',[0,.12],2,'both','Cambio de altura de cabeza: pérdida de nivel/postura.'],
+ ['ee','Caderas hacia la bola (early extension)',(mid(fi,23,24).x-mid(f0,23,24).x)*dir/TL,'TL',[-.35,.1],2,'dtl','Las caderas se acercan a la bola: causa típica de hosel/shank. Drill: culo contra pared/silla durante todo el swing.'],
+ ['ho','Manos se alejan del cuerpo (→impacto)',hx(fi,H[im])-hx(f0,H[ad]),'TL',[-.25,.1],2,'dtl','Manos hacia fuera en la bajada (over the top) = riesgo de hosel. Drill: tee/cubre-palo a 2 cm por fuera de la bola; no lo toques.'],
+ ['hv','Velocidad de manos (≈ m/s)',s[im]*TL/TL*0.5,'m/s',null,1,'both','Referencia relativa entre sesiones (escala estimada, no es velocidad de palo).']];
+ return L.filter(r=>(r[6]==='both'||r[6]===V)&&!(r[0]==='hv'&&PH.slow)).map(([id,l,val,u,ok,d,vw,tip])=>{
+  let st='info';if(ok){const[lo,hi]=ok,w=hi-lo,e=val<lo?lo-val:val>hi?val-hi:0;st=e===0?'ok':e<=.35*w?'warn':'bad'}
+  return{id,l,val,u,ok,d,st,tip}});
+}
+
+function diag(){
+ const o=[],g=n=>+$(n).value,m=id=>M.find(x=>x.id===id),L=lefty(),push=L?'L':'R';
+ const gd=g('gDir'),side=$('gSide').value;
+ if(gd){
+  if(gd>=15&&side===push){const ev=['ee','ho'].filter(i=>m(i)&&m(i).st!=='ok').length;
+   o.push(['bad',`Golfboy: salida ${side}${gd}°. Para un ${L?'zurdo':'diestro'} la bola sale hacia el lado ${L?'izquierdo':'derecho'} (empuje/“push”). Con tanto ángulo el patrón es compatible con contacto en el hosel (shank) o una cara muy abierta. ${view()==='dtl'?(ev?'El vídeo lo respalda: hay señales de caderas hacia la bola y/o manos hacia fuera.':'En el vídeo no veo caderas ni manos desplazándose; comprueba con spray/cinta de impacto en el hosel.'):'Graba también desde atrás (DTL) para confirmar early extension y trayectoria de manos.'}`])}
+  else if(gd>=4)o.push([side===push?'warn':'warn',`Golfboy: salida ${side}${gd}°. ${side===push?'Empuje leve: cara abierta respecto al objetivo en el impacto.':'Tirón: cara cerrada respecto al objetivo.'}`])}
+ const bad=M.filter(x=>x.st==='bad'),wa=M.filter(x=>x.st==='warn');
+ bad.slice(0,3).forEach(x=>o.push(['bad',`${x.l}: ${x.val.toFixed(x.d)}${x.u}. ${x.tip}`]));
+ if(!bad.length)wa.slice(0,2).forEach(x=>o.push(['warn',`${x.l}: ${x.val.toFixed(x.d)}${x.u}. ${x.tip}`]));
+ if(!bad.length&&!wa.length)o.push(['ok','Todos los checkpoints dentro de rango en este swing.']);
+ const q=[];if(miss/F.length>.1)q.push(`En ${Math.round(100*miss/F.length)}% de los frames no se detectó el cuerpo`);
+ if(PH.slow)q.push('Vídeo en cámara lenta: el tempo y los ángulos valen, las velocidades absolutas no');q.push(`Muestreo a ${FPS} fps: las fases tienen ±${Math.round(1000/FPS)} ms. Ajusta Top/Impacto a mano con el frame a frame`);
+ o.push(['ok','Calidad: '+q.join('. ')+'. Las métricas 2D son estimaciones de una cámara, no radar: úsalas para comparar tus swings entre sí.']);
+ return o;
+}
+
+function render(){
+ const{tk,top,im}=PH;$('mh').textContent=`Métricas · atrás ${((top-tk)/FPS).toFixed(2)}s · bajada ${((im-top)/FPS).toFixed(2)}s`;
+ $('mt').innerHTML=M.map(x=>`<div class="m ${x.st}"><span>${x.l}</span><b>${x.val.toFixed(x.d)}</b> ${x.u}<span>${x.ok?'rango '+x.ok[0]+' a '+x.ok[1]:'informativo'}</span>${x.st==='warn'||x.st==='bad'?`<p>${x.tip}</p>`:''}</div>`).join('');
+ $('dg').innerHTML=diag().map(([c,t])=>`<div class="dg ${c}">${t}</div>`).join('');
+}
+
+function jump(k){v.pause();$('pl').textContent='▶';v.currentTime=OFF+PH[k]/FPS}
+function step(d){v.pause();$('pl').textContent='▶';v.currentTime=Math.min(v.duration,Math.max(0,OFF+(frame()+d)/FPS))}
+function toggle(){if(v.paused){v.playbackRate=+$('spd').value;v.play();$('pl').textContent='❚❚'}else{v.pause();$('pl').textContent='▶'}}
+function fix(k){const o=PH[k];PH[k]=frame();if(k==='im')learn((PH.im-o)/FPS);if(PH.top>=PH.im)return;M=metrics();SW[+$('sw').value].M=M;render();renderCmp()}
+$('sc').oninput=e=>{v.pause();v.currentTime=OFF+e.target.value/FPS};
+
+const BONES=[[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
+function line(a,b,c,w,dash,targetCtx=cx){targetCtx.beginPath();targetCtx.setLineDash(dash||[]);targetCtx.strokeStyle=c;targetCtx.lineWidth=w;targetCtx.moveTo(a.x,a.y);targetCtx.lineTo(b.x,b.y);targetCtx.stroke();targetCtx.setLineDash([])}
+
+function renderOverlays(targetCtx,width,height,i,curF,curPH,curOpts,hudInfo=null){
+ if(!curF||!curF[i]||!curPH)return;
+ const f=curF[i],S=sides(),lw=Math.max(3,width/260),ld=Object.values(S.lead),tr=Object.values(S.trail);
+ if(curOpts.gd){const a=mid(f,23,24),b=mid(f,11,12);line(a,b,'#ffffff',lw*.75,[10,8],targetCtx);line(f[11],f[12],'#a78bfa',lw*.75,null,targetCtx);line(f[23],f[24],'#34d399',lw*.75,null,targetCtx)}
+ if(curOpts.gh&&curPH.G)drawGhost(i,lw,targetCtx,curPH);
+ if(curOpts.sk){
+  BONES.forEach(([a,b])=>line(f[a],f[b],ld.includes(a)&&ld.includes(b)?'#00d1ff':tr.includes(a)&&tr.includes(b)?'#fbbf24':'#ffffff',lw,null,targetCtx));
+  [11,12,13,14,15,16,23,24,25,26,27,28].forEach(idx=>{const p=f[idx];if(!p)return;targetCtx.fillStyle=ld.includes(idx)?'#00d1ff':tr.includes(idx)?'#fbbf24':'#ffffff';targetCtx.beginPath();targetCtx.arc(p.x,p.y,lw*.85,0,7);targetCtx.fill()});
+ }
+ if(curOpts.tr&&curPH.H){
+  targetCtx.beginPath();targetCtx.strokeStyle='#00e6a4';targetCtx.lineWidth=lw*1.1;targetCtx.lineCap='round';targetCtx.lineJoin='round';
+  const e=Math.min(i,curPH.fin);
+  for(let k=curPH.tk;k<=e;k++){const p=curPH.H[k];if(p){if(k===curPH.tk)targetCtx.moveTo(p.x,p.y);else targetCtx.lineTo(p.x,p.y)}}
+  targetCtx.stroke();
+  [['ad','A'],['top','T'],['im','I'],['fin','F']].forEach(([k,t])=>{
+   if(i>=curPH[k]&&curPH.H[curPH[k]]){
+    const p=curPH.H[curPH[k]];
+    targetCtx.fillStyle='#ffffff';targetCtx.beginPath();targetCtx.arc(p.x,p.y,lw*1.7,0,7);targetCtx.fill();
+    targetCtx.strokeStyle='#00e6a4';targetCtx.lineWidth=Math.max(1,lw*.3);targetCtx.stroke();
+    targetCtx.fillStyle='#0a0d14';targetCtx.font=`bold ${Math.round(lw*2.2)}px sans-serif`;targetCtx.textAlign='center';targetCtx.textBaseline='middle';targetCtx.fillText(t,p.x,p.y+1);
+   }
+  });
+ }
+ if(hudInfo)drawHud(targetCtx,width,height,i,curPH,hudInfo,lw);
+}
+
+function drawHud(ctx,width,height,i,curPH,hudData,lw){
+ ctx.save();
+ const pad=Math.round(width*0.025),fs=Math.max(12,Math.round(width*0.022));
+ let phase='ADDRESS',pc='#94a3b8';
+ if(i>=curPH.fin){phase='FINISH';pc='#a78bfa'}
+ else if(Math.abs(i-curPH.im)<=1){phase='★ IMPACTO ★';pc='#00e6a4'}
+ else if(i>=curPH.im){phase='FOLLOW-THROUGH';pc='#38bdf8'}
+ else if(i>=curPH.top){phase='BAJADA (DOWNSWING)';pc='#fbbf24'}
+ else if(i>=curPH.tk){phase='BACKSWING';pc='#38bdf8'}
+ const tRel=((i-curPH.im)/FPS).toFixed(2),tStr=(tRel>=0?`+${tRel}`:tRel)+'s';
+ const bText=`${phase} · ${tStr}`;
+ ctx.font=`bold ${fs}px system-ui,-apple-system,sans-serif`;
+ const tw=ctx.measureText(bText).width,bw=tw+fs*1.6,bh=fs*2.2;
+ ctx.fillStyle='rgba(10,13,20,0.85)';ctx.strokeStyle=pc;ctx.lineWidth=Math.max(1.5,lw*.35);
+ ctx.beginPath();roundRect(ctx,pad,pad,bw,bh,bh/2);ctx.fill();ctx.stroke();
+ ctx.fillStyle='#ffffff';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(bText,pad+fs*.8,pad+bh/2);
+ const club=clubName(),tv=(hudData.M&&(hudData.M.find(x=>x.id==='tempo')||{}).val)||0;
+ const rText=`Golf Swing Analyzer · ${club}${tv?` · Tempo ${tv.toFixed(1)}:1`:''}`;
+ const rtw=ctx.measureText(rText).width,rbw=rtw+fs*1.6;const rx=width-pad-rbw;
+ ctx.fillStyle='rgba(10,13,20,0.85)';ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;
+ ctx.beginPath();roundRect(ctx,rx,pad,rbw,bh,bh/2);ctx.fill();ctx.stroke();
+ ctx.fillStyle='#f1f5f9';ctx.fillText(rText,rx+fs*.8,pad+bh/2);
+ const fText=`Frame ${i}/${curPH.fin||hudData.F.length-1}`;
+ ctx.font=`500 ${Math.max(11,Math.round(fs*.85))}px monospace`;
+ ctx.fillStyle='rgba(255,255,255,0.75)';ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText(fText,pad,height-pad);
+ ctx.restore();
+}
+function roundRect(ctx,x,y,w,h,r){if(w<2*r)r=w/2;if(h<2*r)r=h/2;ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+
+function draw(){
+ requestAnimationFrame(draw);cx.clearRect(0,0,cv.width,cv.height);if(!F.length||!PH)return;
+ const i=frame();$('sc').value=i;
+ const nm=i<PH.tk?'Address':i<PH.top?'Backswing':i<PH.im?'Bajada':i<PH.fin?'Impacto→Finish':'Finish';$('ph').textContent=`${nm} · frame ${i}`;
+ renderOverlays(cx,cv.width,cv.height,i,F,PH,opts,null);
+}
+const GK={hip:[0,-.04,.1,.16],lean:[5,8,14,-4],shT:[0,90,25,-75],shTl:[-4,22,-10,0],hpT:[0,45,40,-80],arm:[0,130,3,-140],club:[10,270,8,-315],cf:[1,1,1,1]},
+ GKD={hip:[0,-.04,-.02,-.1],lean:[35,36,32,6],shT:[0,90,35,-70],shTl:[-4,22,-10,0],hpT:[0,45,40,-75],arm:[0,125,0,-140],club:[25,215,25,-300],cf:[1,.45,1,.85]},ease=x=>x*x*(3-2*x),rd=x=>x*Math.PI/180;
+let IMPOFF=1/30;try{const a=JSON.parse(localStorage.impD||'[]');if(a.length)IMPOFF=med(a)}catch(e){}
+function learn(d){if(!d)return;try{let a=JSON.parse(localStorage.impD||'[]');a.push(IMPOFF+d);a=a.slice(-10);localStorage.impD=JSON.stringify(a);IMPOFF=med(a)}catch(e){}}
+function autoView(f){const B=f.slice(0,Math.round(f.length/3));return Math.max(...B.map(g=>dist(g[11],g[12])))/med(f.map(g=>dist(mid(g,11,12),mid(g,23,24))))>.5?'face':'dtl'}
+function clubSpec(){const t=($('club').value||'7').trim().toUpperCase(),n=+t,W={P:46,A:50,G:50,S:56,L:60,PW:46,AW:50,GW:50,SW:56,LW:60};
+ if(t==='1'||t==='D')return{len:2.3,loft:10.5,nm:'Driver'};if(/^\d+W$/.test(t))return{len:2.2,loft:15,nm:t};
+ if(n>=2&&n<=9)return{len:2.05-.02*(n-2),loft:[18,21,24,27,30,34,38,42][n-2],nm:n+'I'};
+ if(n>=40&&n<=64)return{len:1.85,loft:n,nm:n+'°'};return W[t]?{len:1.85,loft:W[t],nm:t}:{len:1.95,loft:33,nm:'7I'}}
+function ghostDims(){const S=sides(),f=F[PH.ad],B=F.slice(0,PH.tk+1),d=(a,b)=>med(B.map(g=>dist(g[a],g[b]))),L=S.lead,T=S.trail;
+ return{tdir:Math.sign(f[L.s].x-f[T.s].x)||1,dirB:Math.sign(mid(f,15,16).x-mid(f,23,24).x)||1,P:mid(f,23,24),TL:PH.TL,shW:Math.max(...B.map(g=>dist(g[11],g[12]))),hpW:Math.max(...B.map(g=>dist(g[23],g[24]))),shF:.8*PH.TL,hpF:.55*PH.TL,
+  ua:d(L.s,L.e),fa:d(L.e,L.w),ta:d(T.s,T.e),tf:d(T.e,T.w),th:d(L.h,L.k),sn:d(L.k,L.a),neck:dist(f[0],mid(f,11,12)),A:[{x:f[L.a].x,y:f[L.a].y},{x:f[T.a].x,y:f[T.a].y}]}}
+function gp(key,i,K,curPH=PH){const k=[curPH.ad,curPH.top,curPH.im,curPH.fin],a=(K||GK)[key];if(i<=k[0])return a[0];for(let j=0;j<3;j++)if(i<=k[j+1])return a[j]+(a[j+1]-a[j])*ease((i-k[j])/(k[j+1]-k[j]||1));return a[3]}
+function ik(s,w,l1,l2,pref){const dx=w.x-s.x,dy=w.y-s.y,D=Math.hypot(dx,dy)||1,d=Math.min(Math.max(D,Math.abs(l1-l2)+1),l1+l2-1),a=(l1*l1-l2*l2+d*d)/(2*d),h=Math.sqrt(Math.max(0,l1*l1-a*a)),ux=dx/D,uy=dy/D,b={x:s.x+ux*a,y:s.y+uy*a},E=[{x:b.x-uy*h,y:b.y+ux*h},{x:b.x+uy*h,y:b.y-ux*h}];return pref(E[0])>=pref(E[1])?E[0]:E[1]}
+function ghostPts(i,curPH=PH){const G=curPH.G,D=curPH.view==='dtl',K=D?GKD:GK,g=k=>gp(k,i,K,curPH),S0=sides(),ld=S0.lead,tr=S0.trail,t=G.tdir,bd=G.dirB,ax=D?bd:t,sg=D?bd:-t,
+ P={x:G.P.x+ax*g('hip')*G.TL,y:G.P.y},ln=rd(g('lean')),S={x:P.x+sg*Math.sin(ln)*G.TL,y:P.y-Math.cos(ln)*G.TL},sT=rd(g('shT')),hT=rd(g('hpT')),tl=rd(g('shTl')),q={};
+ const hw=(w0,F0,a)=>D?(1-Math.sin(a))*t*w0/2+Math.sin(a)*bd*F0/2:t*w0/2*Math.cos(a);
+ q[ld.s]={x:S.x+hw(G.shW,G.shF,sT),y:S.y+G.shW/2*Math.sin(tl)};q[tr.s]={x:S.x-hw(G.shW,G.shF,sT),y:S.y-G.shW/2*Math.sin(tl)};
+ q[ld.h]={x:P.x+hw(G.hpW,G.hpF,hT),y:P.y};q[tr.h]={x:P.x-hw(G.hpW,G.hpF,hT),y:P.y};
+ const b=rd(g('arm')),u={x:-ax*Math.sin(b),y:Math.cos(b)},s=q[ld.s];
+ q[ld.e]={x:s.x+u.x*G.ua,y:s.y+u.y*G.ua};q[ld.w]={x:s.x+u.x*(G.ua+G.fa),y:s.y+u.y*(G.ua+G.fa)};q[tr.w]=q[ld.w];q[tr.e]=ik(q[tr.s],q[tr.w],G.ta,G.tf,p=>p.y);
+ [ld,tr].forEach((o,j)=>{const hp=q[o.h],sd=Math.sign(hp.x-P.x)||1;q[o.a]=G.A[j];q[o.k]=ik(hp,G.A[j],G.th,G.sn,D?(p=>p.x*bd):(p=>(p.x-P.x)*sd))});
+ q[0]={x:S.x+sg*Math.sin(ln)*G.neck*.8,y:S.y-G.neck};
+ const cg=rd(g('club')),cu={x:-ax*Math.sin(cg),y:Math.cos(cg)},h=q[ld.w],L=G.TL*clubSpec().len*g('cf');
+ q.c={a:h,b:{x:h.x+cu.x*L,y:h.y+cu.y*L},u:cu,p:{x:ax*cu.y,y:-ax*cu.x},ax};return q}
+function drawGhost(i,lw,targetCtx=cx,curPH=PH){
+ if(!curPH||!curPH.G)return;
+ const q=ghostPts(i,curPH),c=q.c,cs=clubSpec(),hl=curPH.G.TL*.3,D=curPH.view==='dtl';
+ targetCtx.save();targetCtx.globalAlpha=.9;
+ BONES.forEach(([a,b])=>line(q[a],q[b],'#00e6a4',lw*1.4,null,targetCtx));
+ targetCtx.fillStyle='#00e6a4';targetCtx.beginPath();targetCtx.arc(q[0].x,q[0].y,lw*3,0,7);targetCtx.fill();
+ line(c.a,c.b,'#d9f7ff',lw,null,targetCtx);
+ const toe={x:c.b.x+c.p.x*hl,y:c.b.y+c.p.y*hl},bk={x:toe.x-c.u.x*hl*.5,y:toe.y-c.u.y*hl*.5};
+ targetCtx.fillStyle='#d9f7ff';targetCtx.beginPath();targetCtx.moveTo(c.b.x,c.b.y);targetCtx.lineTo(toe.x,toe.y);targetCtx.lineTo(bk.x,bk.y);targetCtx.lineTo(c.b.x-c.u.x*hl*.35,c.b.y-c.u.y*hl*.35);targetCtx.closePath();targetCtx.fill();
+ line(c.b,toe,'#fff',lw*1.8,null,targetCtx);
+ if(Math.abs(i-curPH.im)<=4){
+  const m={x:(c.b.x+toe.x)/2,y:(c.b.y+toe.y)/2};targetCtx.strokeStyle=targetCtx.fillStyle='#38bdf8';targetCtx.lineWidth=lw;
+  if(D){targetCtx.beginPath();targetCtx.arc(m.x,m.y,lw*3.5,0,7);targetCtx.stroke();targetCtx.beginPath();targetCtx.arc(m.x,m.y,lw*1.2,0,7);targetCtx.fill()}
+  else{const e={x:m.x+curPH.G.tdir*curPH.G.TL*.55,y:m.y};line(m,e,'#38bdf8',lw,null,targetCtx);targetCtx.beginPath();targetCtx.moveTo(e.x,e.y);targetCtx.lineTo(e.x-curPH.G.tdir*lw*3,e.y-lw*2);targetCtx.lineTo(e.x-curPH.G.tdir*lw*3,e.y+lw*2);targetCtx.fill()}
+  targetCtx.font=`bold ${lw*3.2}px sans-serif`;targetCtx.textAlign='center';targetCtx.fillText(`cara cuadrada · ${cs.nm} loft≈${cs.loft}°`,m.x,m.y-lw*7)
+ }
+ targetCtx.restore()}
+function clubName(){const t=($('club').value||'').trim().toUpperCase();if(!t)return'-';
+ if(/^\d+$/.test(t)){const n=+t;return n===1?'Driver':n<=9?n+'I':n>=40&&n<=64?n+'°':t}
+ if(/^\d+W$/.test(t))return t;
+ return{P:'PW',PW:'PW',A:'AW',AW:'AW',G:'GW',GW:'GW',S:'SW',SW:'SW',L:'LW',LW:'LW',D:'Driver'}[t]||t}
+const DATA={face:null,dtl:null},SAME=['tempo','kAd','kIm','arm','hr'];
+function stat(v,ok){if(!ok)return'info';const[lo,hi]=ok,w=hi-lo,e=v<lo?lo-v:v>hi?v-hi:0;return e===0?'ok':e<=.35*w?'warn':'bad'}
+function agg(sw){const o={};sw.forEach(s=>s.M.forEach(x=>(o[x.id]=o[x.id]||{x,v:[]}).v.push(x.val)));return Object.values(o).map(({x,v})=>{const m=med(v);return{...x,val:m,st:stat(m,x.ok),n:v.length}})}
+function renderDual(){
+ const A=DATA.face&&agg(DATA.face),B=DATA.dtl&&agg(DATA.dtl),box=$('dual');box.hidden=!(A||B);if(box.hidden)return;
+ const R=[],mk=(x,src,conf)=>R.push({...x,src,conf});
+ (A||[]).forEach(x=>{const y=B&&B.find(z=>z.id===x.id);
+  if(y&&SAME.includes(x.id)){const w=x.ok?x.ok[1]-x.ok[0]:1,agree=Math.abs(x.val-y.val)<=.25*w+(x.id==='tempo'?.2:0),m=(x.val+y.val)/2;mk({...x,val:m,st:stat(m,x.ok)},'frente + atrás',agree?'alta':'baja: las cámaras discrepan')}
+  else if(y)mk({...x,l:x.l+' · frente'},'frente','alta');
+  else mk(x,'frente',SAME.includes(x.id)?'media':'alta')});
+ (B||[]).forEach(y=>{const x=A&&A.find(z=>z.id===y.id);if(x&&SAME.includes(y.id))return;mk(x?{...y,l:y.l+' · atrás'}:y,'atrás',SAME.includes(y.id)?'media':'alta')});
+ const gd=+$('gDir').value,hosel=gd>=15&&$('gSide').value===(lefty()?'L':'R');
+ const pr=x=>({bad:2,warn:1}[x.st]||0)+(hosel&&['ee','ho','hs'].includes(x.id)?1:0)-(x.conf.startsWith('baja')?.5:0);
+ const top=R.filter(x=>x.st==='warn'||x.st==='bad').sort((a,b)=>pr(b)-pr(a)).slice(0,3),f=x=>x.val.toFixed(x.d)+x.u;
+ let h=`<div class="h">Vistas cargadas: ${A?'frente ✓':'frente —'} · ${B?'atrás ✓':'atrás —'}${A&&B?'':' · carga la otra vista (cambia “Cámara” y analiza) para un diagnóstico más fiable'}. Valores = mediana de ${[A&&DATA.face.length,B&&DATA.dtl.length].filter(Boolean).join(' y ')} swing(s).</div>`;
+ if(hosel)h+=`<div class="dg bad">Golfboy marca salida ${$('gSide').value}${gd}°: prioridad al contacto de hosel. Miro primero caderas hacia la bola, manos hacia fuera y balanceo de cabeza.</div>`;
+ h+=top.length?top.map((x,i)=>`<div class="dg ${x.st}"><b>${i+1}. ${x.l}: ${f(x)}</b> (rango ${x.ok[0]} a ${x.ok[1]}) · fuente: ${x.src} · confianza ${x.conf}<br>${x.tip}</div>`).join(''):'<div class="dg ok">Sin alertas en las métricas medidas.</div>';
+ h+='<div style="margin-top:8px">'+R.map(x=>`<div class="h" style="border-left:3px solid var(--${x.st==='ok'?'ok':x.st==='warn'?'wa':x.st==='bad'?'ba':'mu'});padding-left:6px">${x.l}: <b>${f(x)}</b> · ${x.src} · conf. ${x.conf}</div>`).join('')+'</div>';
+ if($('sim').checked&&A&&B){const a=DATA.face,b=DATA.dtl,n=Math.min(a.length,b.length),c=m=>`${m.filter(x=>x.st==='ok').length} OK / ${m.filter(x=>x.st==='bad').length} alertas`;
+  h+='<h2 style="margin-top:12px">Por swing (emparejados por orden)</h2>'+[...Array(n)].map((_,i)=>`<div class="h">Swing ${i+1}: frente ${c(a[i].M)} · atrás ${c(b[i].M)}</div>`).join('')+(a.length!==b.length?`<div class="dg warn">Detecté ${a.length} swings de frente y ${b.length} desde atrás: el emparejamiento por orden puede no ser correcto.</div>`:'')}
+ $('dualb').innerHTML=h}
+
+draw();
+
+function save(){try{const h=JSON.parse(localStorage.getItem('swingHist')||'[]');
+ h.unshift({d:new Date().toLocaleString(),club:clubName(),view:view(),gb:{c:$('gCarry').value,t:$('gTotal').value,s:$('gSpd').value,a:$('gAng').value,sd:$('gSide').value,dr:$('gDir').value},m:M.map(x=>[x.id,+x.val.toFixed(2),x.st])});
+ localStorage.setItem('swingHist',JSON.stringify(h.slice(0,30)))}catch(e){}renderHist()}
+function renderHist(){let h=[];try{h=JSON.parse(localStorage.getItem('swingHist')||'[]')}catch(e){}
+ $('hist').innerHTML=h.length?h.map(s=>{const g=id=>(s.m.find(x=>x[0]===id)||[])[1];const ok=s.m.filter(x=>x[2]==='ok').length,tot=s.m.filter(x=>x[2]!=='info').length;
+  return`<div class="h">${s.d} · ${s.club} · ${s.view.toUpperCase()} · tempo ${g('tempo')??'-'}:1 · ${ok}/${tot} OK${s.gb.dr?` · Golfboy ${s.gb.sd}${s.gb.dr}°`:''}</div>`}).join(''):'<div class="h">Sin sesiones guardadas.</div>'}
+renderHist();
+
+/* --- VIDEO EXPORT ENGINE (MP4 / WebCodecs + Muxer + MediaRecorder fallback) --- */
+let isExporting=false,abortExport=false;
+
+function openExportModal(){
+ if(!SW.length)return;
+ $('exp-modal').hidden=false;
+ $('exp-prog-wrap').hidden=true;
+ $('exp-go-btn').disabled=false;
+ $('exp-cancel-btn').textContent='Cancelar';
+ $('exp-sk').checked=!!opts.sk;
+ $('exp-tr').checked=!!opts.tr;
+ $('exp-gd').checked=!!opts.gd;
+ $('exp-gh').checked=!!opts.gh;
+}
+function closeExportModal(){
+ if(isExporting)return;
+ $('exp-modal').hidden=true;
+}
+function cancelOrCloseExport(){
+ if(isExporting){
+  abortExport=true;
+  $('exp-prog-lbl').textContent='Cancelando exportación...';
+ }else{
+  closeExportModal();
+ }
+}
+
+async function getSupportedAvcCodec(width,height,fps){
+ if(!window.VideoEncoder)return null;
+ const codecs=['avc1.4d002a','avc1.640028','avc1.42e01f','avc1.4d001f'];
+ for(const c of codecs){
+  try{
+   const res=await VideoEncoder.isConfigSupported({codec:c,width,height,bitrate:6000000,framerate:fps});
+   if(res&&res.supported)return c;
+  }catch(e){}
+ }
+ return null;
+}
+
+async function exportSingleSwing(swingIdx,totalCount,userOpts){
+ const s=SW[swingIdx];
+ if(!s||!s.F.length)return;
+ const origW=v.videoWidth||cv.width,origH=v.videoHeight||cv.height;
+ let encW=origW,encH=origH;
+ if(userOpts.res==='1080'&&(origW>1920||origH>1920)){
+  const sc=Math.min(1920/origW,1080/origH);
+  encW=Math.round(origW*sc);
+  encH=Math.round(origH*sc);
+ }
+ encW=encW-(encW%2);
+ encH=encH-(encH%2);
+ const scale=encW/origW;
+
+ const expCv=document.createElement('canvas');
+ expCv.width=encW;
+ expCv.height=encH;
+ const expCtx=expCv.getContext('2d',{alpha:false});
+
+ const speed=userOpts.speed;
+ const outputFps=Math.max(15,Math.round(FPS*speed));
+ const frameDurationUs=Math.round(1000000/(FPS*speed));
+ const totalFrames=s.F.length;
+
+ const avcCodec=typeof Mp4Muxer!=='undefined'?await getSupportedAvcCodec(encW,encH,outputFps):null;
+
+ if(avcCodec&&typeof Mp4Muxer!=='undefined'&&window.VideoEncoder){
+  const muxer=new Mp4Muxer.Muxer({
+   target:new Mp4Muxer.ArrayBufferTarget(),
+   video:{codec:'avc',width:encW,height:encH},
+   fastStart:'in-memory'
+  });
+  let encErr=null;
+  const videoEncoder=new VideoEncoder({
+   output:(chunk,meta)=>muxer.addVideoChunk(chunk,meta),
+   error:e=>{encErr=e;console.error(e)}
+  });
+  videoEncoder.configure({
+   codec:avcCodec,
+   width:encW,
+   height:encH,
+   bitrate:Math.min(12000000,Math.max(3000000,encW*encH*3)),
+   framerate:outputFps
+  });
+
+  for(let i=0;i<totalFrames;i++){
+   if(abortExport)break;
+   await safeSeek(s.off+i/FPS);
+   expCtx.drawImage(v,0,0,encW,encH);
+   if(scale!==1){
+    expCtx.save();
+    expCtx.scale(scale,scale);
+    renderOverlays(expCtx,origW,origH,i,s.F,s.PH,userOpts.opts,userOpts.hud?s:null);
+    expCtx.restore();
+   }else{
+    renderOverlays(expCtx,encW,encH,i,s.F,s.PH,userOpts.opts,userOpts.hud?s:null);
+   }
+   const timestampUs=i*frameDurationUs;
+   const vf=new VideoFrame(expCv,{timestamp:timestampUs});
+   videoEncoder.encode(vf,{keyFrame:i%Math.max(1,outputFps)===0});
+   vf.close();
+
+   const prefix=totalCount>1?`Swing ${swingIdx+1}/${totalCount} · `:``;
+   const pct=Math.round(((i+1)/totalFrames)*100);
+   $('exp-prog-lbl').textContent=`${prefix}Frame ${i+1}/${totalFrames}`;
+   $('exp-prog-pct').textContent=`${pct}%`;
+   $('exp-bar').style.width=`${pct}%`;
+   $('exp-prog-sub').textContent=`Generando fotogramas con esqueletos (${pct}%)...`;
+   await new Promise(r=>setTimeout(r,0));
+  }
+
+  if(abortExport){
+   videoEncoder.close();
+   return;
+  }
+  $('exp-prog-sub').textContent='Finalizando empaquetado MP4...';
+  await videoEncoder.flush();
+  muxer.finalize();
+  const blob=new Blob([muxer.target.buffer],{type:'video/mp4'});
+  downloadBlob(blob,`golf-swing-${swingIdx+1}-${speed}x.mp4`);
+ }else{
+  $('exp-prog-sub').textContent='Grabando mediante MediaRecorder...';
+  const stream=expCv.captureStream(outputFps);
+  const mime=['video/mp4','video/webm;codecs=vp9','video/webm'].find(m=>MediaRecorder.isTypeSupported(m))||'';
+  const rec=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
+  const chunks=[];
+  rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data)};
+  const recFinished=new Promise(resolve=>{
+   rec.onstop=()=>{
+    const ext=(mime&&mime.includes('mp4'))?'mp4':'webm';
+    const blob=new Blob(chunks,{type:mime||'video/webm'});
+    downloadBlob(blob,`golf-swing-${swingIdx+1}-${speed}x.${ext}`);
+    resolve();
+   };
+  });
+
+  rec.start();
+  for(let i=0;i<totalFrames;i++){
+   if(abortExport)break;
+   await safeSeek(s.off+i/FPS);
+   expCtx.drawImage(v,0,0,encW,encH);
+   if(scale!==1){
+    expCtx.save();
+    expCtx.scale(scale,scale);
+    renderOverlays(expCtx,origW,origH,i,s.F,s.PH,userOpts.opts,userOpts.hud?s:null);
+    expCtx.restore();
+   }else{
+    renderOverlays(expCtx,encW,encH,i,s.F,s.PH,userOpts.opts,userOpts.hud?s:null);
+   }
+   const pct=Math.round(((i+1)/totalFrames)*100);
+   $('exp-prog-pct').textContent=`${pct}%`;
+   $('exp-bar').style.width=`${pct}%`;
+   await new Promise(r=>setTimeout(r,1000/outputFps));
+  }
+  rec.stop();
+  await recFinished;
+ }
+}
+
+async function runExport(){
+ if(isExporting||!SW.length)return;
+ isExporting=true;
+ abortExport=false;
+ $('exp-go-btn').disabled=true;
+ $('exp-cancel-btn').textContent='Cancelar';
+ $('exp-prog-wrap').hidden=false;
+ $('exp-bar').style.width='0%';
+ $('exp-prog-sub').textContent='Preparando motor de exportación...';
+
+ v.pause();
+ $('pl').textContent='▶';
+
+ const userOpts={
+  speed:+$('exp-spd').value||0.25,
+  res:$('exp-res').value,
+  hud:$('exp-hud').checked,
+  opts:{
+   sk:$('exp-sk').checked?1:0,
+   tr:$('exp-tr').checked?1:0,
+   gd:$('exp-gd').checked?1:0,
+   gh:$('exp-gh').checked?1:0
+  }
+ };
+
+ const exportAll=$('exp-all-sw').checked;
+ const swingsToExport=exportAll?SW.map((_,idx)=>idx):[+$('sw').value||0];
+
+ try{
+  for(let sIdx=0;sIdx<swingsToExport.length;sIdx++){
+   if(abortExport)break;
+   await exportSingleSwing(swingsToExport[sIdx],swingsToExport.length,userOpts);
+  }
+  if(!abortExport){
+   $('exp-prog-lbl').textContent='¡Vídeo exportado y descargado con éxito!';
+   $('exp-prog-sub').textContent='El archivo MP4 se ha guardado en tu equipo.';
+   setTimeout(()=>{closeExportModal()},2000);
+  }else{
+   $('exp-prog-lbl').textContent='Exportación cancelada.';
+   $('exp-prog-sub').textContent='';
+  }
+ }catch(err){
+  console.error(err);
+  alert('Error durante la exportación: '+err.message);
+ }finally{
+  isExporting=false;
+  abortExport=false;
+  $('exp-go-btn').disabled=false;
+  $('exp-cancel-btn').textContent='Cerrar';
+  if(SW[+$('sw').value]){
+   v.currentTime=OFF+(PH?PH.im/FPS:0);
+  }
+ }
+}
+
+function downloadBlob(blob,filename){
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+ a.style.display='none';
+ a.href=url;
+ a.download=filename;
+ document.body.appendChild(a);
+ a.click();
+ setTimeout(()=>{
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+ },3000);
+}
+
+/* --- MONETIZATION & FRAMING GUIDE FLOWS --- */
+function openStoreModal(){$('store-modal').hidden=false}
+function closeStoreModal(){$('store-modal').hidden=true}
+function buyCredits(amount,price){
+ credits+=amount;
+ updateCreditsUI();
+ alert(`¡Pago de ${price}€ simulado con éxito! Se han añadido ${amount} crédito(s) a tu cuenta.`);
+ closeStoreModal();
+}
+function openProReviewModal(){
+ if(!SW.length){
+  alert('Primero analiza un vídeo de swing para adjuntarlo a la revisión profesional.');
+  return;
+ }
+ $('pro-modal').hidden=false;
+ $('pro-form-wrap').hidden=false;
+ $('pro-success-wrap').hidden=true;
+ $('pro-club-name').textContent=clubName();
+ const curSw=SW[+$('sw').value||0];
+ $('pro-sw-info').textContent=`Swing ${+$('sw').value+1} · Tempo ${(curSw.M.find(x=>x.id==='tempo')||{}).val?.toFixed(1)||'-'}:1 · Vista ${view().toUpperCase()}`;
+}
+function closeProReviewModal(){$('pro-modal').hidden=true}
+function submitProReview(){
+ const btn=$('pro-pay-btn');
+ btn.disabled=true;
+ btn.textContent='Procesando solicitud (50€)...';
+ setTimeout(()=>{
+  $('pro-form-wrap').hidden=true;
+  $('pro-success-wrap').hidden=false;
+  $('pro-order-id').textContent='PGA-'+Math.floor(100000+Math.random()*900000);
+  btn.disabled=false;
+  btn.textContent='Solicitar y Pagar 50€';
+ },1000);
+}
+function openFramingGuideModal(){$('guide-modal').hidden=false}
+function closeFramingGuideModal(){$('guide-modal').hidden=true}
+
+updateCreditsUI();
+</script>
+
+<div id="exp-modal" class="modal-backdrop" hidden>
+ <div class="modal-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+   <h3 style="font-size:16px;font-weight:700;color:var(--tx);display:flex;align-items:center;gap:8px">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Exportar vídeo analizado
+   </h3>
+   <button type="button" onclick="closeExportModal()" style="padding:4px 8px;font-size:16px;background:none;border:none;color:var(--mu);cursor:pointer">✕</button>
+  </div>
+  <p style="font-size:12px;color:var(--mu);margin-bottom:12px">El vídeo se procesará fotograma a fotograma con todos los esqueletos, trayectoria y líneas en formato MP4 de alta calidad listo para compartir o enviar a tu profesor.</p>
+  <div class="row" style="margin:8px 0">
+   <label>Velocidad de reproducción
+    <select id="exp-spd">
+     <option value="0.25" selected>0.25x (Cámara lenta análisis - Recomendado)</option>
+     <option value="0.5">0.50x (Cámara lenta moderada)</option>
+     <option value="1.0">1.00x (Velocidad real 1x)</option>
+    </select>
+   </label>
+   <label>Resolución de salida
+    <select id="exp-res">
+     <option value="1080" selected>Full HD 1080p (Óptimo y compatible)</option>
+     <option value="orig">Original (Máxima resolución)</option>
+    </select>
+   </label>
+  </div>
+  <div style="margin:12px 0">
+   <span style="font-size:12px;color:var(--mu);display:block;margin-bottom:6px">Elementos visuales a incluir en el vídeo:</span>
+   <div class="chk-grid">
+    <label><input type="checkbox" id="exp-sk" checked> Esqueleto y articulaciones</label>
+    <label><input type="checkbox" id="exp-tr" checked> Trayectoria manos (A, T, I, F)</label>
+    <label><input type="checkbox" id="exp-gd" checked> Guías columna y caderas</label>
+    <label><input type="checkbox" id="exp-gh" checked> Swing ideal (Ghost + cara)</label>
+    <label><input type="checkbox" id="exp-hud" checked> Telemetría HUD (Fase y tempo)</label>
+    <label><input type="checkbox" id="exp-all-sw"> Exportar todos los swings</label>
+   </div>
+  </div>
+  <div id="exp-prog-wrap" hidden style="margin:14px 0;background:#0d121b;padding:12px;border-radius:10px;border:1px solid var(--bd)">
+   <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--tx);margin-bottom:4px">
+    <span id="exp-prog-lbl">Generando vídeo frame a frame...</span>
+    <span id="exp-prog-pct" style="font-weight:700;color:var(--ok)">0%</span>
+   </div>
+   <div class="pb" style="height:8px;margin-top:4px"><i id="exp-bar" style="width:0%"></i></div>
+   <small id="exp-prog-sub" style="color:var(--mu);font-size:11px;display:block;margin-top:6px">Codificando vídeo MP4 (H.264)...</small>
+  </div>
+  <div style="display:flex;gap:10px;margin-top:16px">
+   <button id="exp-cancel-btn" onclick="cancelOrCloseExport()" style="flex:1">Cancelar</button>
+   <button id="exp-go-btn" class="main" style="flex:2;padding:11px" onclick="runExport()">Generar y Descargar MP4</button>
+  </div>
+ </div>
+</div>
+
+<!-- Store Modal (1€ Analysis) -->
+<div id="store-modal" class="modal-backdrop" hidden>
+ <div class="modal-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+   <h3 style="font-size:16px;font-weight:700;color:var(--tx);display:flex;align-items:center;gap:8px">
+    🪙 Comprar créditos de análisis IA
+   </h3>
+   <button type="button" onclick="closeStoreModal()" style="padding:4px 8px;font-size:16px;background:none;border:none;color:var(--mu);cursor:pointer">✕</button>
+  </div>
+  <p style="font-size:12px;color:var(--mu);margin-bottom:14px">Cada análisis instantáneo con IA utiliza 1 crédito. Incluye desglose biomecánico completo, detección de fases y exportación de vídeo en MP4.</p>
+  
+  <div class="price-card" onclick="buyCredits(1, '1.00')">
+   <div>
+    <b style="font-size:14px;color:var(--tx)">1 Análisis Instantáneo</b>
+    <span style="font-size:11px;color:var(--mu);display:block">Prueba suelta de 1 swing</span>
+   </div>
+   <div style="text-align:right">
+    <b style="font-size:18px;color:var(--ok)">1,00 €</b>
+    <span class="badge-chip" style="display:block;margin-top:2px">1€ / swing</span>
+   </div>
+  </div>
+
+  <div class="price-card" onclick="buyCredits(5, '3.99')">
+   <div>
+    <b style="font-size:14px;color:var(--tx)">Bono 5 Análisis</b>
+    <span style="font-size:11px;color:var(--mu);display:block">Para una sesión de prácticas completa</span>
+   </div>
+   <div style="text-align:right">
+    <b style="font-size:18px;color:var(--ok)">3,99 €</b>
+    <span class="badge-chip" style="display:block;margin-top:2px">0.80€ / swing · -20%</span>
+   </div>
+  </div>
+
+  <div class="price-card pop" onclick="buyCredits(10, '6.99')">
+   <div>
+    <div style="display:flex;align-items:center;gap:6px">
+     <b style="font-size:14px;color:var(--tx)">Bono 10 Análisis + HD</b>
+     <span class="badge-chip" style="background:var(--ok);color:#06120d">POPULAR</span>
+    </div>
+    <span style="font-size:11px;color:var(--mu);display:block">Análisis multi-cámara + histórico</span>
+   </div>
+   <div style="text-align:right">
+    <b style="font-size:18px;color:var(--ok)">6,99 €</b>
+    <span class="badge-chip" style="display:block;margin-top:2px">0.70€ / swing · -30%</span>
+   </div>
+  </div>
+
+  <div style="margin-top:16px;text-align:center">
+   <button onclick="closeStoreModal()" style="width:100%;padding:10px">Cerrar</button>
+  </div>
+ </div>
+</div>
+
+<!-- Pro Review Modal (50€ PGA Coach) -->
+<div id="pro-modal" class="modal-backdrop" hidden>
+ <div class="modal-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+   <h3 style="font-size:16px;font-weight:700;color:var(--tx);display:flex;align-items:center;gap:8px">
+    ⭐ Revisión con Profesor Titulado PGA
+   </h3>
+   <button type="button" onclick="closeProReviewModal()" style="padding:4px 8px;font-size:16px;background:none;border:none;color:var(--mu);cursor:pointer">✕</button>
+  </div>
+  
+  <div id="pro-form-wrap">
+   <div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:12px;padding:12px;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+     <span style="font-size:13px;font-weight:700;color:var(--wa)">Revisión en vídeo personalizada</span>
+     <b style="font-size:20px;color:var(--wa)">50,00 €</b>
+    </div>
+    <ul style="font-size:11px;color:#cbd5e1;margin-top:6px;padding-left:16px;line-height:1.5">
+     <li>Análisis biomecánico en vídeo con voz en off y líneas dibujadas por un pro PGA.</li>
+     <li>Diagnóstico del fallo raíz que provoca la dispersión.</li>
+     <li>2 ejercicios (drills) prácticos grabados en vídeo adaptados a tu swing.</li>
+     <li>Entrega en menos de 24 horas laborables en tu correo o WhatsApp.</li>
+    </ul>
+   </div>
+
+   <div class="row" style="margin:8px 0">
+    <label>Swing a revisar
+     <div style="padding:8px;background:#0d121b;border:1px solid var(--bd);border-radius:8px;font-size:13px;color:var(--ok)" id="pro-sw-info">Swing actual</div>
+    </label>
+    <label>Palo utilizado
+     <div style="padding:8px;background:#0d121b;border:1px solid var(--bd);border-radius:8px;font-size:13px;color:var(--tx)" id="pro-club-name">Hierro 7</div>
+    </label>
+   </div>
+
+   <div style="margin:10px 0">
+    <label style="font-size:12px;color:var(--mu);margin-bottom:4px">¿Qué fallo principal deseas corregir?
+     <select id="pro-fault" style="margin-top:4px">
+      <option value="slice">Slice / Fade descontrolado (se va a la derecha)</option>
+      <option value="hook">Hook / Pull (se va a la izquierda)</option>
+      <option value="distance">Pérdida de distancia y falta de compresión</option>
+      <option value="shank">Contacto en el talón (shank) o punta</option>
+      <option value="fat_thin">Golpes pesados (chuletas antes de bola) o filazos</option>
+      <option value="posture">Pérdida de postura / levantarme en el impacto</option>
+     </select>
+    </label>
+   </div>
+
+   <div style="margin:10px 0">
+    <label style="font-size:12px;color:var(--mu);margin-bottom:4px">Notas o sensaciones para el profesor (opcional):
+     <input type="text" id="pro-notes" placeholder="Ej: Me cuesta transferir el peso a la pierna izquierda..." style="margin-top:4px">
+    </label>
+   </div>
+
+   <div style="display:flex;gap:10px;margin-top:16px">
+    <button onclick="closeProReviewModal()" style="flex:1">Cancelar</button>
+    <button id="pro-pay-btn" class="main" style="flex:2;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1c1301;font-weight:700" onclick="submitProReview()">Solicitar y Pagar 50€</button>
+   </div>
+  </div>
+
+  <div id="pro-success-wrap" hidden style="text-align:center;padding:16px 8px">
+   <div style="font-size:42px;margin-bottom:10px">🎉</div>
+   <h4 style="font-size:17px;color:var(--ok);margin-bottom:6px">¡Solicitud recibida correctamente!</h4>
+   <p style="font-size:13px;color:var(--tx);margin-bottom:12px">Referencia: <b id="pro-order-id" style="color:var(--lead)">PGA-000000</b></p>
+   <p style="font-size:12px;color:var(--mu);line-height:1.45;margin-bottom:16px">Hemos asignado tu swing a nuestro profesor PGA titulado. Recibirás tu vídeo de análisis detallado y los ejercicios correctivos en menos de 24 horas.</p>
+   <button class="main" style="width:100%" onclick="closeProReviewModal()">Entendido</button>
+  </div>
+ </div>
+</div>
+
+<!-- Framing Guide Modal (Camera setup) -->
+<div id="guide-modal" class="modal-backdrop" hidden>
+ <div class="modal-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+   <h3 style="font-size:16px;font-weight:700;color:var(--tx);display:flex;align-items:center;gap:8px">
+    📷 Guía de Encuadre para Máxima Fiabilidad
+   </h3>
+   <button type="button" onclick="closeFramingGuideModal()" style="padding:4px 8px;font-size:16px;background:none;border:none;color:var(--mu);cursor:pointer">✕</button>
+  </div>
+  <p style="font-size:12px;color:var(--mu);margin-bottom:14px">Para que la IA y el profesor analicen tus ángulos al milímetro, coloca el móvil según la vista que vayas a grabar:</p>
+
+  <div class="guide-box" style="border-left:4px solid var(--ok)">
+   <b style="color:var(--ok);font-size:13px">1. Vista Desde Atrás (DTL / Down The Line)</b>
+   <p style="font-size:11px;color:#cbd5e1;margin-top:4px">
+    📍 <b>Colocación:</b> Detrás del jugador, en la prolongación de la línea de las manos o del palo hacia el objetivo.<br>
+    ⚠ <b>¡Ojo!:</b> NO colocar la cámara delante de la red ni en ángulo diagonal de 45°.<br>
+    📏 <b>Distancia y altura:</b> 3,5 a 4 metros por detrás, a la altura de las manos en el address (~1 metro del suelo).<br>
+    🎯 <b>Mide:</b> Eje de columna, Early Extension (caderas hacia la bola), y plano del palo (Over the Top).
+   </p>
+  </div>
+
+  <div class="guide-box" style="border-left:4px solid var(--lead)">
+   <b style="color:var(--lead);font-size:13px">2. Vista De Frente (Face-On)</b>
+   <p style="font-size:11px;color:#cbd5e1;margin-top:4px">
+    📍 <b>Colocación:</b> Justo enfrente del esternón del jugador, formando 90° exactos con la línea del objetivo.<br>
+    📏 <b>Distancia y altura:</b> 3 a 4 metros de distancia, a la altura del pecho o cintura.<br>
+    📐 <b>Encuadre:</b> Asegúrate de que se vean los pies en el suelo y el arco completo del palo en el top.<br>
+    🎯 <b>Mide:</b> Giro de hombros (90°), giro de caderas (45°), X-Factor, estabilidad de cabeza (Sway) y flexión de rodilla.
+   </p>
+  </div>
+
+  <button class="main" style="width:100%;margin-top:6px" onclick="closeFramingGuideModal()">Entendido, volver a la app</button>
+ </div>
+</div>
+</main></body></html>

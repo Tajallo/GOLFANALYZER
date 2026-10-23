@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.6.0] - 2026-10-23
+### Added
+- **3D World Landmark Tracking (`poseWorldLandmarks`)**: Full 3D rotational vector extraction (`turn3D`) using MediaPipe metric world coordinates $(x, y, z)$ for shoulder line (11-12) and hip line (23-24). Completely fixes the 2D foreshortening artifact where shoulder turn and X-Factor collapsed to 0° at top position.
+- **Diestro (Right-Handed) Default & Dynamic Update**: Changed default handedness to Right-Handed ("Diestro"), with reactive dynamic recalculation (`onHandChange`) for lead/trail side overlays, ghost reference, and biomechanical metrics without requiring re-analysis.
+- **Interactive Camera Framing Guide Modal**: Built-in visual guide with exact tripod heights (waist/hands), distance (3.5m), and alignment instructions for Down-the-Line (DTL) and Face-On to avoid perspective distortions.
+- **Monetization & Credit Store System**:
+  - Top header balance display with remaining AI credits.
+  - Credit Pack Store modal (1 Swing = 1€, 5 Swings = 3.99€, 10 Swings = 6.99€) ready for Apple StoreKit / Google Play Billing integration via Capacitor.
+- **PGA Professional Review Workflow (50€)**:
+  - Pro Review request modal allowing players to send video + telemetry summary to a certified PGA Coach.
+  - Interactive fault checklist (Slice, Hook, Shank, Fat, Thin, Distance Loss), student notes, and guaranteed <24h turnaround.
+
+### Fixed
+- **iPhone Slow-Motion Seek Resilience**: Implemented safety timeout fallback in `seek()` (250ms) to prevent video stalling during analysis of 120fps/240fps iPhone slow-mo recordings.
+- **MediaPipe Model Complexity Optimization**: Maintained `opt(1)` to eliminate dynamic ~100MB CDN heavy model download stalls, ensuring instant client-side execution in under 3 seconds.
+
 ## [4.5.0] - 2026-10-23
 ### Added
 - **Full Video MP4 Export Engine (`v4.5`)**: Export the analyzed golf swing frame-by-frame with all overlays (skeletons, postural guides, ideal ghost avatar, hand trajectory, and HUD telemetry) into a crystal-clear H.264 MP4 file.
